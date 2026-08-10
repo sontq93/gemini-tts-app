@@ -629,3 +629,258 @@ input[type="range"]::-webkit-slider-thumb:hover {
     transform: translateX(100%);
   }
 }
+
+/* -------------------------------------------------------------
+   Studio Pro Upgrade Styles
+   ------------------------------------------------------------- */
+
+/* Studio Nav Tabs */
+.studio-nav-tabs {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 16px;
+  background: rgba(15, 17, 28, 0.7);
+  overflow-x: auto;
+}
+
+.tab-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition-speed) ease;
+}
+
+.tab-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.tab-btn.active {
+  background: rgba(79, 172, 254, 0.15);
+  border-color: var(--card-border-focus);
+  color: var(--accent-secondary);
+  font-weight: 600;
+  box-shadow: 0 4px 15px rgba(0, 242, 254, 0.15);
+}
+
+/* Left actions in textarea footer */
+.left-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.highlight-link {
+  color: var(--accent-primary) !important;
+  font-weight: 500;
+  margin-left: 0.5rem;
+}
+
+.highlight-link:hover {
+  text-decoration: underline;
+}
+
+/* Multi-speaker Banner */
+.multi-speaker-banner {
+  background: rgba(79, 172, 254, 0.08);
+  border: 1px solid rgba(79, 172, 254, 0.2);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* AI Script Assistant Section */
+.script-builder-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+@media(min-width: 600px) {
+  .script-builder-grid {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+.input-group-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.action-bar-left {
+  display: flex;
+  justify-content: flex-start;
+}
+
+/* BGM Panel */
+.bgm-panel {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  transition: border-color var(--transition-speed);
+}
+
+.bgm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bgm-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Toggle Switch Component */
+.toggle-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.toggle-switch input {
+  display: none;
+}
+
+.toggle-switch .slider {
+  width: 38px;
+  height: 20px;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  position: relative;
+  transition: background-color 0.3s;
+}
+
+.toggle-switch .slider::before {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  left: 3px;
+  top: 3px;
+  background-color: #fff;
+  transition: transform 0.3s;
+}
+
+.toggle-switch input:checked + .slider {
+  background: var(--accent-gradient);
+}
+
+.toggle-switch input:checked + .slider::before {
+  transform: translateX(18px);
+}
+
+.bgm-controls {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px dashed rgba(255, 255, 255, 0.08);
+  animation: fadeIn var(--transition-speed) ease;
+}
+
+.bgm-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+@media(min-width: 600px) {
+  .bgm-grid {
+    grid-template-columns: 1.5fr 1fr;
+  }
+}
+
+.bgm-footer-option {
+  margin-top: 0.5rem;
+}
+
+/* Checkbox Container */
+.checkbox-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.checkbox-container input {
+  accent-color: var(--accent-primary);
+  width: 16px;
+  height: 16px;
+}
+
+/* Speed Control in Player */
+.speed-control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.speed-label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.speed-buttons {
+  display: flex;
+  gap: 0.25rem;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 2px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.btn-speed {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.4rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-speed:hover {
+  color: var(--text-primary);
+}
+
+.btn-speed.active {
+  background: var(--accent-primary);
+  color: #0b0c13;
+  font-weight: 700;
+}
+

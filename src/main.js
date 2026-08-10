@@ -11,15 +11,40 @@ const saveKeyBtn = document.getElementById('btn-save-key');
 const clearKeyBtn = document.getElementById('btn-clear-key');
 const keyStatusText = document.getElementById('key-status-text');
 
+// Studio Navigation Tabs
+const tabSingleBtn = document.getElementById('btn-tab-single');
+const tabMultiBtn = document.getElementById('btn-tab-multi');
+const tabScriptBtn = document.getElementById('btn-tab-script');
+
+// Script Assistant Elements
+const scriptPanel = document.getElementById('panel-script-assistant');
+const scriptIdeaInput = document.getElementById('input-script-idea');
+const scriptGenreSelect = document.getElementById('select-script-genre');
+const generateScriptBtn = document.getElementById('btn-generate-script');
+
 // Generator Elements
 const textInput = document.getElementById('text-input');
 const sampleTextBtn = document.getElementById('btn-sample-text');
+const importFileBtn = document.getElementById('btn-import-file');
+const inputFileElement = document.getElementById('input-file-element');
 const charCounter = document.getElementById('char-counter');
 const voiceSelect = document.getElementById('select-voice');
 const emotionSelect = document.getElementById('select-emotion');
 const customPromptWrapper = document.getElementById('custom-prompt-wrapper');
 const customPromptInput = document.getElementById('input-custom-prompt');
 const generateBtn = document.getElementById('btn-generate');
+const multiSpeakerInfo = document.getElementById('multi-speaker-info');
+const sampleDialogueBtn = document.getElementById('btn-sample-dialogue');
+const settingsGridSingle = document.getElementById('settings-grid-single');
+
+// BGM Mixer Elements
+const checkEnableBgm = document.getElementById('check-enable-bgm');
+const bgmControlsBody = document.getElementById('bgm-controls-body');
+const selectBgmTheme = document.getElementById('select-bgm-theme');
+const customBgmFileInput = document.getElementById('input-custom-bgm-file');
+const sliderBgmVolume = document.getElementById('slider-bgm-volume');
+const bgmVolVal = document.getElementById('bgm-vol-val');
+const checkAutoDucking = document.getElementById('check-auto-ducking');
 
 // Player Elements
 const emptyState = document.getElementById('audio-empty-state');
@@ -31,6 +56,7 @@ const currentTimeSpan = document.getElementById('player-current-time');
 const durationTimeSpan = document.getElementById('player-duration');
 const muteBtn = document.getElementById('btn-mute');
 const volumeSlider = document.getElementById('player-volume');
+const speedButtonsGroup = document.getElementById('speed-buttons-group');
 
 // Visualizer & Download Elements
 const canvas = document.getElementById('waveform-canvas');
@@ -43,10 +69,19 @@ let audioCtx = null;
 let analyser = null;
 let source = null;
 let visualizerAnimationId = null;
+let currentPlaybackSpeed = 1.0;
+let activeMode = 'single'; // 'single' | 'multi' | 'script'
+
+// BGM Audio Nodes
+let bgmAudioElement = null;
+let bgmGainNode = null;
+let voiceGainNode = null;
+let bgmSourceNode = null;
+let synthBgmOscillators = [];
 
 // Danh sách văn bản mẫu
 const SAMPLE_TEXTS = [
-  "Chào mừng bạn đến với ứng dụng Gemini Voice Generator. Đây là công cụ tạo giọng nói trí tuệ nhân tạo chất lượng cao, giúp bạn truyền tải thông điệp bằng tiếng Việt một cách sống động nhất.",
+  "Chào mừng bạn đến với ứng dụng Gemini Voice Studio Pro. Đây là công cụ tạo giọng nói trí tuệ nhân tạo chất lượng cao, giúp bạn truyền tải thông điệp bằng tiếng Việt một cách sống động nhất.",
   "Ngày xưa, ở một ngôi làng nhỏ ven sông, có một cậu bé luôn mơ ước được bay lên các vì sao. Cậu thường ngồi dưới gốc đa cổ thụ, nhìn lên bầu trời đêm lấp lánh và thầm thì tự kể những câu chuyện phiêu lưu của riêng mình.",
   "Nhanh hơn. Thông minh hơn. Khám phá ngay công nghệ chuyển đổi văn bản thành giọng nói thế hệ mới từ Google Gemini. Hãy bấm nút tạo giọng nói và cảm nhận sự khác biệt!"
 ];
@@ -65,7 +100,6 @@ const EMOTION_PROMPTS = {
   comedy: "Đọc với phong cách dí dỏm, vui tươi và hóm hỉnh. Nhịp điệu linh hoạt, nhanh nhẹn, nhấn nhá cường điệu nhẹ vào các câu thoại, chi tiết hài hước hoặc kịch tính vui vẻ để mang lại sự sảng khoái và tiếng cười cho người nghe.",
   meditation: "Đọc với phong cách dẫn thiền định (Meditation) hoặc podcast thư giãn tối đa. Tông giọng cực kỳ mềm mại, nhẹ nhàng như hơi thở, tốc độ đọc siêu chậm, nhịp thở đều đặn và êm ái. Tạo không gian bình yên, tĩnh lặng, an lành và thư giãn tuyệt đối cho tâm trí."
 };
-
 
 // -------------------------------------------------------------
 // 2. Logic API Key
@@ -126,7 +160,47 @@ clearKeyBtn.addEventListener('click', () => {
 });
 
 // -------------------------------------------------------------
-// 3. Logic Nhập liệu & Tham số
+// 3. Logic Navigation Tabs & Studio Modes
+// -------------------------------------------------------------
+
+function switchTab(mode) {
+  activeMode = mode;
+  tabSingleBtn.classList.remove('active');
+  tabMultiBtn.classList.remove('active');
+  tabScriptBtn.classList.remove('active');
+
+  if (mode === 'single') {
+    tabSingleBtn.classList.add('active');
+    scriptPanel.classList.add('hidden');
+    multiSpeakerInfo.classList.add('hidden');
+    settingsGridSingle.classList.remove('hidden');
+  } else if (mode === 'multi') {
+    tabMultiBtn.classList.add('active');
+    scriptPanel.classList.add('hidden');
+    multiSpeakerInfo.classList.remove('hidden');
+    settingsGridSingle.classList.add('hidden');
+  } else if (mode === 'script') {
+    tabScriptBtn.classList.add('active');
+    scriptPanel.classList.remove('hidden');
+    multiSpeakerInfo.classList.add('hidden');
+    settingsGridSingle.classList.remove('hidden');
+  }
+}
+
+tabSingleBtn.addEventListener('click', () => switchTab('single'));
+tabMultiBtn.addEventListener('click', () => switchTab('multi'));
+tabScriptBtn.addEventListener('click', () => switchTab('script'));
+
+// Nạp kịch bản mẫu Multi-speaker
+sampleDialogueBtn.addEventListener('click', () => {
+  textInput.value = `[Aoede]: Chào anh Fenrir! Anh đã nghe tin về ứng dụng Gemini AI Voice Studio Pro mới chưa?
+[Fenrir]: Chào em Aoede! Anh nghe rồi chứ, công cụ này hỗ trợ đọc kịch bản đối thoại đa nhân vật và trộn nhạc nền cực kỳ ấn tượng!
+[Aoede]: Đúng rồi anh, công nghệ AI từ Google giúp giọng đọc biểu cảm và tự nhiên hơn bao giờ hết!`;
+  textInput.dispatchEvent(new Event('input'));
+});
+
+// -------------------------------------------------------------
+// 4. Logic Nhập liệu, Import File & AI Script Assistant
 // -------------------------------------------------------------
 
 function checkGenerateState() {
@@ -144,9 +218,24 @@ textInput.addEventListener('input', () => {
 sampleTextBtn.addEventListener('click', () => {
   textInput.value = SAMPLE_TEXTS[currentSampleIndex];
   textInput.dispatchEvent(new Event('input'));
-  
-  // Xoay vòng văn bản mẫu
   currentSampleIndex = (currentSampleIndex + 1) % SAMPLE_TEXTS.length;
+});
+
+// Nạp file .txt / .md từ máy cá nhân
+importFileBtn.addEventListener('click', () => {
+  inputFileElement.click();
+});
+
+inputFileElement.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    textInput.value = event.target.result;
+    textInput.dispatchEvent(new Event('input'));
+  };
+  reader.readAsText(file);
 });
 
 emotionSelect.addEventListener('change', () => {
@@ -157,161 +246,375 @@ emotionSelect.addEventListener('change', () => {
   }
 });
 
+// Sáng tạo kịch bản tự động bằng Gemini AI Text Generation
+generateScriptBtn.addEventListener('click', async () => {
+  const idea = scriptIdeaInput.value.trim();
+  if (!idea) {
+    alert("Vui lòng nhập ý tưởng kịch bản bạn muốn tạo.");
+    return;
+  }
+  if (!apiKey) {
+    alert("Vui lòng cấu hình Gemini API Key trước.");
+    return;
+  }
+
+  generateScriptBtn.disabled = true;
+  generateScriptBtn.textContent = "🤖 Đang sáng tạo kịch bản...";
+
+  try {
+    const genre = scriptGenreSelect.value;
+    let genreInstruction = "Viết kịch bản hấp dẫn, tự nhiên.";
+    if (genre === 'tvc') genreInstruction = "Viết kịch bản TVC quảng cáo ngắn, sôi nổi, lôi cuốn, có điểm nhấn thương hiệu.";
+    if (genre === 'tiktok') genreInstruction = "Viết kịch bản video ngắn TikTok/Reels giật gân, câu hook hấp dẫn ở 3s đầu.";
+    if (genre === 'dialogue') genreInstruction = "Viết kịch bản đối thoại giữa 2 nhân vật [Aoede] (Nữ trong trẻo) và [Fenrir] (Nam trầm ấm) nói chuyện qua lại tự nhiên.";
+    if (genre === 'review') genreInstruction = "Viết kịch bản thuyết minh review phim kịch tính, lôi cuốn.";
+    if (genre === 'horror') genreInstruction = "Viết kịch bản truyện ma kinh dị ngắn u tối, rùng rợn.";
+
+    const promptText = `Bạn là một biên kịch chuyên nghiệp. Hãy dựa trên ý tưởng sau để viết kịch bản hoàn chỉnh bằng tiếng Việt.
+Ý tưởng: "${idea}"
+Yêu cầu thể loại: ${genreInstruction}
+
+Quy tắc:
+- CHỈ trả về đúng nội dung kịch bản cần đọc. KHÔNG kèm lời chào hay giải thích.
+- Nếu là thể loại đối thoại, hãy ghi rõ dạng [Aoede]: ... và [Fenrir]: ...`;
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: promptText }] }]
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Lỗi gọi Gemini API (${response.status})`);
+    }
+
+    const data = await response.json();
+    const scriptText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+    if (scriptText) {
+      textInput.value = scriptText.trim();
+      textInput.dispatchEvent(new Event('input'));
+      if (genre === 'dialogue') {
+        switchTab('multi');
+      } else {
+        switchTab('single');
+      }
+    } else {
+      throw new Error("Không nhận được nội dung kịch bản từ AI.");
+    }
+  } catch (err) {
+    console.error(err);
+    alert(`Lỗi tạo kịch bản: ${err.message}`);
+  } finally {
+    generateScriptBtn.disabled = false;
+    generateScriptBtn.textContent = "🤖 Sáng tạo Kịch bản bằng AI";
+  }
+});
+
 // -------------------------------------------------------------
-// 4. Logic Sinh âm thanh & Chuyển đổi PCM sang WAV
+// 5. Logic BGM Mixer & Web Audio Auto-Ducking
 // -------------------------------------------------------------
 
-// Viết chuỗi ASCII vào DataView
+checkEnableBgm.addEventListener('change', () => {
+  if (checkEnableBgm.checked) {
+    bgmControlsBody.classList.remove('hidden');
+  } else {
+    bgmControlsBody.classList.add('hidden');
+    stopBgm();
+  }
+});
+
+sliderBgmVolume.addEventListener('input', () => {
+  bgmVolVal.textContent = `${sliderBgmVolume.value}%`;
+  if (bgmGainNode && audioCtx) {
+    const vol = sliderBgmVolume.value / 100;
+    bgmGainNode.gain.setTargetAtTime(vol, audioCtx.currentTime, 0.1);
+  }
+});
+
+selectBgmTheme.addEventListener('change', () => {
+  if (selectBgmTheme.value === 'custom') {
+    customBgmFileInput.click();
+  } else {
+    if (bgmAudioElement) {
+      bgmAudioElement.pause();
+      bgmAudioElement = null;
+    }
+  }
+});
+
+customBgmFileInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  bgmAudioElement = new Audio(url);
+  bgmAudioElement.loop = true;
+});
+
+// Tổng hợp giai điệu nhạc nền Synth mượt mà bằng Web Audio API khi không nạp file ngoài
+function playSynthBgm(theme, ctx, outputNode) {
+  stopSynthBgm();
+  const now = ctx.currentTime;
+  const masterGain = ctx.createGain();
+  masterGain.gain.setValueAtTime(0.3, now);
+  masterGain.connect(outputNode);
+
+  let freqs = [220, 277.18, 329.63, 440]; // A Major Chord default (TVC)
+  if (theme === 'horror') freqs = [110, 116.54, 155.56, 220]; // Dissonant Horror Pad
+  if (theme === 'relax') freqs = [174.61, 220, 261.63, 329.63]; // Fmaj7 Relax Pad
+  if (theme === 'news') freqs = [130.81, 196.00, 261.63, 392.00]; // C Power Pulse
+
+  freqs.forEach((freq) => {
+    const osc = ctx.createOscillator();
+    osc.type = theme === 'horror' ? 'sawtooth' : 'sine';
+    osc.frequency.setValueAtTime(freq, now);
+    
+    // Slow LFO Modulator for ambient feel
+    const lfo = ctx.createOscillator();
+    lfo.frequency.setValueAtTime(0.2, now);
+    const lfoGain = ctx.createGain();
+    lfoGain.gain.setValueAtTime(5, now);
+    lfo.connect(osc.frequency);
+
+    osc.connect(masterGain);
+    osc.start(now);
+    lfo.start(now);
+
+    synthBgmOscillators.push(osc, lfo);
+  });
+}
+
+function stopSynthBgm() {
+  synthBgmOscillators.forEach(osc => {
+    try { osc.stop(); } catch (_) {}
+  });
+  synthBgmOscillators = [];
+}
+
+function startBgm() {
+  if (!checkEnableBgm.checked) return;
+  if (!audioCtx) return;
+
+  const targetVol = (sliderBgmVolume.value / 100);
+  if (!bgmGainNode) {
+    bgmGainNode = audioCtx.createGain();
+    bgmGainNode.connect(analyser || audioCtx.destination);
+  }
+  bgmGainNode.gain.setTargetAtTime(targetVol, audioCtx.currentTime, 0.1);
+
+  if (selectBgmTheme.value === 'custom' && bgmAudioElement) {
+    if (!bgmSourceNode) {
+      bgmSourceNode = audioCtx.createMediaElementSource(bgmAudioElement);
+      bgmSourceNode.connect(bgmGainNode);
+    }
+    bgmAudioElement.play().catch(console.warn);
+  } else {
+    playSynthBgm(selectBgmTheme.value, audioCtx, bgmGainNode);
+  }
+}
+
+function applyAutoDucking(isSpeaking) {
+  if (!checkEnableBgm.checked || !bgmGainNode || !audioCtx) return;
+  if (!checkAutoDucking.checked) return;
+
+  const baseVol = sliderBgmVolume.value / 100;
+  const targetVol = isSpeaking ? baseVol * 0.25 : baseVol; // Giảm âm xuống 25% khi nói
+  bgmGainNode.gain.setTargetAtTime(targetVol, audioCtx.currentTime, 0.3);
+}
+
+function stopBgm() {
+  stopSynthBgm();
+  if (bgmAudioElement) {
+    bgmAudioElement.pause();
+  }
+}
+
+// -------------------------------------------------------------
+// 6. Logic Sinh âm thanh & Chuyển đổi PCM sang WAV
+// -------------------------------------------------------------
+
 function writeString(view, offset, string) {
   for (let i = 0; i < string.length; i++) {
     view.setUint8(offset + i, string.charCodeAt(i));
   }
 }
 
-// Chèn 44-byte WAV header vào mảng bytes PCM 16-bit 24kHz Mono
 function pcmToWav(pcmUint8Array, sampleRate = 24000) {
   const buffer = new ArrayBuffer(44 + pcmUint8Array.byteLength);
   const view = new DataView(buffer);
   
-  // 1. "RIFF"
   writeString(view, 0, 'RIFF');
-  // 2. File size minus 8 bytes
   view.setUint32(4, 36 + pcmUint8Array.byteLength, true);
-  // 3. "WAVE"
   writeString(view, 8, 'WAVE');
-  // 4. "fmt "
   writeString(view, 12, 'fmt ');
-  // 5. Length of format chunk (16)
   view.setUint32(16, 16, true);
-  // 6. Format (1 = raw PCM)
   view.setUint16(20, 1, true);
-  // 7. Channels (1 = Mono)
   view.setUint16(22, 1, true);
-  // 8. Sample Rate (24000 Hz)
   view.setUint32(24, sampleRate, true);
-  // 9. Byte Rate (SampleRate * Channels * BitsPerSample / 8) = 24000 * 1 * 2 = 48000 B/s
   view.setUint32(28, sampleRate * 2, true);
-  // 10. Block Align (Channels * BitsPerSample / 8) = 1 * 2 = 2 bytes
   view.setUint16(32, 2, true);
-  // 11. Bits per Sample (16-bit)
   view.setUint16(34, 16, true);
-  // 12. "data"
   writeString(view, 36, 'data');
-  // 13. Data chunk size (pcm data length)
   view.setUint32(40, pcmUint8Array.byteLength, true);
   
-  // Ghép dữ liệu PCM vào sau Header
   const wavBytes = new Uint8Array(buffer);
   wavBytes.set(pcmUint8Array, 44);
-  
   return wavBytes;
+}
+
+// Phân tích kịch bản Multi-speaker [VoiceName]: Text
+function parseMultiSpeakerScript(rawText) {
+  const lines = rawText.split('\n');
+  const dialogueChunks = [];
+
+  const speakerRegex = /^\[([a-zA-Z0-9_]+)\]\s*:\s*(.+)$/;
+
+  for (let line of lines) {
+    line = line.trim();
+    if (!line) continue;
+    const match = line.match(speakerRegex);
+    if (match) {
+      dialogueChunks.push({
+        voice: match[1],
+        text: match[2]
+      });
+    } else {
+      // Nếu dòng không ghi tên voice, dùng voice đang chọn mặc định
+      dialogueChunks.push({
+        voice: voiceSelect.value,
+        text: line
+      });
+    }
+  }
+
+  return dialogueChunks;
+}
+
+// Gọi API sinh PCM cho 1 đoạn thoại
+async function fetchPcmChunk(text, voiceName, emotionPrompt) {
+  const finalPrompt = `Bạn là một trợ lý ảo đọc sách chuyên nghiệp. Đọc to và rõ ràng văn bản sau bằng tiếng Việt. KHÔNG được thêm bất kỳ câu mở đầu, kết thúc hoặc từ ngữ nào nằm ngoài văn bản được cung cấp.
+Hướng dẫn về ngữ điệu/cảm xúc khi đọc: ${emotionPrompt}
+
+Văn bản cần đọc:
+"${text}"`;
+
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-tts-preview:generateContent?key=${apiKey}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: finalPrompt }] }],
+      generationConfig: {
+        responseModalities: ["AUDIO"],
+        speechConfig: {
+          voiceConfig: {
+            prebuiltVoiceConfig: { voiceName: voiceName }
+          }
+        }
+      }
+    })
+  });
+
+  if (!response.ok) {
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(errData.error?.message || `Lỗi HTTP ${response.status}`);
+  }
+
+  const result = await response.json();
+  const base64Audio = result.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+  if (!base64Audio) {
+    throw new Error("Không nhận được dữ liệu âm thanh từ mô hình AI.");
+  }
+
+  const binaryString = atob(base64Audio);
+  const pcmBytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    pcmBytes[i] = binaryString.charCodeAt(i);
+  }
+
+  return pcmBytes;
 }
 
 generateBtn.addEventListener('click', async () => {
   const text = textInput.value.trim();
   if (!text || !apiKey) return;
   
-  // Thay đổi trạng thái UI sang Loading
   generateBtn.disabled = true;
   generateBtn.classList.add('loading-pulse');
   const originalBtnText = generateBtn.querySelector('.btn-text').textContent;
-  generateBtn.querySelector('.btn-text').textContent = 'Đang tạo giọng nói AI...';
+  generateBtn.querySelector('.btn-text').textContent = 'Đang tạo âm thanh Studio...';
   
   try {
-    // Xác định cấu hình chỉ dẫn cảm xúc
     let emotionPrompt = EMOTION_PROMPTS.default;
     if (emotionSelect.value === 'custom') {
       emotionPrompt = customPromptInput.value.trim() || EMOTION_PROMPTS.default;
     } else {
       emotionPrompt = EMOTION_PROMPTS[emotionSelect.value];
     }
-    
-    // Tạo prompt cuối cùng gửi lên Gemini
-    // Hướng dẫn rõ ràng để mô hình chỉ đọc đúng văn bản mục tiêu, không tự phát ngôn chào hỏi.
-    const finalPrompt = `Bạn là một trợ lý ảo đọc sách chuyên nghiệp. Đọc to và rõ ràng văn bản sau bằng tiếng Việt. KHÔNG được thêm bất kỳ câu mở đầu, kết thúc hoặc từ ngữ nào nằm ngoài văn bản được cung cấp.
-Hướng dẫn về ngữ điệu/cảm xúc khi đọc: ${emotionPrompt}
 
-Văn bản cần đọc:
-"${text}"`;
+    let finalPcmBytes = null;
 
-    const voiceName = voiceSelect.value;
-    
-    // Gọi API của Google Gemini
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-tts-preview:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              { text: finalPrompt }
-            ]
-          }
-        ],
-        generationConfig: {
-          responseModalities: ["AUDIO"],
-          speechConfig: {
-            voiceConfig: {
-              prebuiltVoiceConfig: {
-                voiceName: voiceName
-              }
-            }
-          }
+    // Kiểm tra xem có chứa cú pháp Multi-speaker không hoặc ở Tab Multi
+    const isMultiScript = text.includes('[') && text.includes(']:');
+
+    if (isMultiScript || activeMode === 'multi') {
+      const dialogueChunks = parseMultiSpeakerScript(text);
+      if (dialogueChunks.length === 0) {
+        throw new Error("Không tìm thấy dòng thoại hợp lệ.");
+      }
+
+      const pcmList = [];
+      let totalLength = 0;
+
+      // Khoảng lặng 0.35s giữa các câu nói (24000Hz * 0.35s * 2 bytes = 16800 bytes)
+      const silenceBytes = new Uint8Array(16800);
+
+      for (let i = 0; i < dialogueChunks.length; i++) {
+        const chunk = dialogueChunks[i];
+        generateBtn.querySelector('.btn-text').textContent = `Đang xử lý đoạn thoại ${i + 1}/${dialogueChunks.length}...`;
+        const pcm = await fetchPcmChunk(chunk.text, chunk.voice, emotionPrompt);
+        pcmList.push(pcm);
+        totalLength += pcm.byteLength;
+
+        if (i < dialogueChunks.length - 1) {
+          pcmList.push(silenceBytes);
+          totalLength += silenceBytes.byteLength;
         }
-      })
-    });
-    
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      const errMsg = errData.error?.message || `Lỗi HTTP ${response.status}`;
-      throw new Error(errMsg);
+      }
+
+      // Ghép các mảng PCM lại thành 1 mảng lớn
+      finalPcmBytes = new Uint8Array(totalLength);
+      let offset = 0;
+      for (const pcm of pcmList) {
+        finalPcmBytes.set(pcm, offset);
+        offset += pcm.byteLength;
+      }
+    } else {
+      // Chế độ Đọc Đơn tiêu chuẩn
+      finalPcmBytes = await fetchPcmChunk(text, voiceSelect.value, emotionPrompt);
     }
     
-    const result = await response.json();
-    const base64Audio = result.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-    
-    if (!base64Audio) {
-      throw new Error("Không nhận được dữ liệu âm thanh từ mô hình AI. Hãy thử kiểm tra lại văn bản hoặc thử lại.");
-    }
-    
-    // Giải mã Base64 thành byte PCM thô
-    const binaryString = atob(base64Audio);
-    const pcmBytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      pcmBytes[i] = binaryString.charCodeAt(i);
-    }
-    
-    // Chuyển đổi thành WAV (Gemini mặc định trả về PCM 24000Hz)
-    const wavBytes = pcmToWav(pcmBytes, 24000);
-    
-    // Tạo URL phát âm thanh
+    // Chuyển đổi sang file WAV
+    const wavBytes = pcmToWav(finalPcmBytes, 24000);
     const audioBlob = new Blob([wavBytes], { type: 'audio/wav' });
     const audioUrl = URL.createObjectURL(audioBlob);
     
-    // Nạp âm thanh vào trình phát
     mainAudio.src = audioUrl;
     mainAudio.load();
     
-    // Thiết lập nút tải xuống
     downloadWavLink.href = audioUrl;
     
-    // Hiển thị trình phát
     emptyState.classList.add('hidden');
     playerWrapper.classList.remove('hidden');
     
-    // Đặt trạng thái visualizer
-    visualizerStatus.textContent = 'Đã tạo âm thanh thành công. Nhấn phát để nghe!';
-    
-    // Tự động tua slide phát về đầu
+    visualizerStatus.textContent = 'Đã tạo âm thanh Studio thành công. Nhấn phát để nghe!';
     resetPlayerUI();
     
   } catch (error) {
     console.error(error);
     alert(`Có lỗi xảy ra: ${error.message}`);
   } finally {
-    // Khôi phục trạng thái button
     generateBtn.disabled = false;
     generateBtn.classList.remove('loading-pulse');
     generateBtn.querySelector('.btn-text').textContent = originalBtnText;
@@ -320,7 +623,7 @@ Văn bản cần đọc:
 });
 
 // -------------------------------------------------------------
-// 5. Logic Trình phát nhạc Custom (Audio Player)
+// 7. Logic Trình phát nhạc & Tốc độ phát (Audio Player & Speed)
 // -------------------------------------------------------------
 
 function formatTime(seconds) {
@@ -338,52 +641,63 @@ function resetPlayerUI() {
   durationTimeSpan.textContent = '0:00';
 }
 
-// Cập nhật thời lượng khi file audio tải xong
+// Chỉnh tốc độ đọc (Playback Speed)
+speedButtonsGroup.addEventListener('click', (e) => {
+  const btn = e.target.closest('.btn-speed');
+  if (!btn) return;
+  
+  speedButtonsGroup.querySelectorAll('.btn-speed').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  
+  currentPlaybackSpeed = parseFloat(btn.dataset.speed);
+  mainAudio.playbackRate = currentPlaybackSpeed;
+});
+
 mainAudio.addEventListener('loadedmetadata', () => {
   durationTimeSpan.textContent = formatTime(mainAudio.duration);
   playerProgress.max = Math.floor(mainAudio.duration);
+  mainAudio.playbackRate = currentPlaybackSpeed;
 });
 
-// Phát / Tạm dừng
 playPauseBtn.addEventListener('click', () => {
   if (mainAudio.paused) {
     mainAudio.play();
     playPauseBtn.textContent = '⏸';
     playPauseBtn.classList.add('playing');
-    visualizerStatus.textContent = 'Đang phát...';
+    visualizerStatus.textContent = 'Đang phát âm thanh Studio...';
     
-    // Kích hoạt Visualizer bằng Web Audio API
     startVisualizer();
+    startBgm();
+    applyAutoDucking(true);
   } else {
     mainAudio.pause();
     playPauseBtn.textContent = '▶';
     playPauseBtn.classList.remove('playing');
     visualizerStatus.textContent = 'Đang tạm dừng';
+    applyAutoDucking(false);
   }
 });
 
-// Cập nhật thanh tiến trình theo thời gian chạy
 mainAudio.addEventListener('timeupdate', () => {
   playerProgress.value = Math.floor(mainAudio.currentTime);
   currentTimeSpan.textContent = formatTime(mainAudio.currentTime);
 });
 
-// Khi người dùng tự tua nhạc bằng thanh kéo
 playerProgress.addEventListener('input', () => {
   mainAudio.currentTime = playerProgress.value;
   currentTimeSpan.textContent = formatTime(mainAudio.currentTime);
 });
 
-// Kết thúc âm thanh
 mainAudio.addEventListener('ended', () => {
   playPauseBtn.textContent = '▶';
   playPauseBtn.classList.remove('playing');
   playerProgress.value = 0;
   currentTimeSpan.textContent = '0:00';
   visualizerStatus.textContent = 'Phát xong âm thanh';
+  applyAutoDucking(false);
+  stopBgm();
 });
 
-// Quản lý âm lượng
 volumeSlider.addEventListener('input', () => {
   const volumeValue = volumeSlider.value / 100;
   mainAudio.volume = volumeValue;
@@ -408,12 +722,11 @@ muteBtn.addEventListener('click', () => {
 });
 
 // -------------------------------------------------------------
-// 6. Logic Sóng nhạc Visualizer (Web Audio API)
+// 8. Logic Sóng nhạc Visualizer (Web Audio API)
 // -------------------------------------------------------------
 
 function startVisualizer() {
   if (audioCtx) {
-    // Nếu context bị suspend bởi trình duyệt, kích hoạt lại
     if (audioCtx.state === 'suspended') {
       audioCtx.resume();
     }
@@ -421,19 +734,17 @@ function startVisualizer() {
   }
   
   try {
-    // Khởi tạo AudioContext
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     analyser = audioCtx.createAnalyser();
-    analyser.fftSize = 128; // Tốc độ phân tích âm thanh tốt cho hiển thị
+    analyser.fftSize = 128;
     
-    // Nối âm thanh từ Audio element vào hệ thống phân tích sóng
     source = audioCtx.createMediaElementSource(mainAudio);
     source.connect(analyser);
     analyser.connect(audioCtx.destination);
     
     drawWaveform();
   } catch (err) {
-    console.warn("Không khởi tạo được AudioContext (CORS hoặc hạn chế trình duyệt):", err);
+    console.warn("Không khởi tạo được AudioContext:", err);
   }
 }
 
@@ -448,11 +759,9 @@ function drawWaveform() {
     const width = canvas.width;
     const height = canvas.height;
     
-    // Tạo hiệu ứng mờ nhòe (motion blur trail) bằng cách vẽ đè lớp đen bán trong suốt
     ctx.fillStyle = 'rgba(10, 11, 16, 0.2)';
     ctx.fillRect(0, 0, width, height);
     
-    // Lấy dữ liệu phân tích dạng tần số sóng âm
     analyser.getByteFrequencyData(dataArray);
     
     const barWidth = (width / bufferLength) * 1.6;
@@ -460,23 +769,15 @@ function drawWaveform() {
     let x = 0;
     
     for (let i = 0; i < bufferLength; i++) {
-      // Chuẩn hóa độ cao
       barHeight = (dataArray[i] / 255) * height * 0.85;
+      if (barHeight < 4) barHeight = 4;
       
-      // Đảm bảo luôn vẽ các vạch nhỏ tối thiểu ngay cả khi đứng im
-      if (barHeight < 4) {
-        barHeight = 4;
-      }
-      
-      // Tạo dải màu chuyển màu neon xanh dương - neon tím mượt mà
       const gradient = ctx.createLinearGradient(0, height, 0, height - barHeight);
       gradient.addColorStop(0, '#4facfe');
       gradient.addColorStop(0.5, '#00f2fe');
       gradient.addColorStop(1, '#9b51e0');
       
       ctx.fillStyle = gradient;
-      
-      // Vẽ thanh bo tròn đầu nhẹ
       ctx.beginPath();
       ctx.roundRect(x, height - barHeight, barWidth - 3, barHeight, [4, 4, 0, 0]);
       ctx.fill();
@@ -488,7 +789,6 @@ function drawWaveform() {
   draw();
 }
 
-// Vẽ một đường thẳng/sóng tĩnh ban đầu trên canvas
 function drawStaticWaveform() {
   const ctx = canvas.getContext('2d');
   const width = canvas.width;
@@ -497,7 +797,6 @@ function drawStaticWaveform() {
   ctx.fillStyle = '#0a0b10';
   ctx.fillRect(0, 0, width, height);
   
-  // Vẽ một dải sóng tĩnh
   ctx.strokeStyle = 'rgba(79, 172, 254, 0.2)';
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -514,7 +813,7 @@ function drawStaticWaveform() {
 }
 
 // -------------------------------------------------------------
-// 7. Khởi tạo ứng dụng
+// 9. Khởi tạo ứng dụng
 // -------------------------------------------------------------
 
 window.addEventListener('DOMContentLoaded', () => {
