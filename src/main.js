@@ -351,6 +351,7 @@ customBgmFileInput.addEventListener('change', (e) => {
   const url = URL.createObjectURL(file);
   bgmAudioElement = new Audio(url);
   bgmAudioElement.loop = true;
+  bgmSourceNode = null; // Reset MediaElementSource node to allow reconnecting
 });
 
 // Tổng hợp giai điệu nhạc nền Synth mượt mà bằng Web Audio API khi không nạp file ngoài
@@ -464,12 +465,31 @@ function pcmToWav(pcmUint8Array, sampleRate = 24000) {
   return wavBytes;
 }
 
+// Thư viện 30 giọng đọc hợp lệ của Gemini API
+const VALID_PREBUILT_VOICES = [
+  "Aoede", "Erinome", "Autonoe", "Laomedeia", "Sadachbia", "Leda", "Despina", "Pulcherrima", "Achernar", "Enceladus",
+  "Fenrir", "Puck", "Orus", "Kore", "Charon", "Rasalgethi", "Alnilam", "Algenib", "Gacrux", "Sulafat",
+  "Zephyr", "Umbriel", "Schedar", "Achird", "Algieba", "Zubenelgenubi", "Sadaltager", "Callirrhoe", "Iapetus", "Vindemiatrix"
+];
+
+function sanitizeVoiceName(rawVoice) {
+  if (!rawVoice) return voiceSelect.value;
+  const clean = rawVoice.trim();
+  
+  // Ánh xạ các tên viết tắt / tiếng Việt phổ biến
+  if (/^nam$/i.test(clean)) return "Fenrir";
+  if (/^(nữ|nu)$/i.test(clean)) return "Aoede";
+
+  const matched = VALID_PREBUILT_VOICES.find(v => v.toLowerCase() === clean.toLowerCase());
+  return matched || voiceSelect.value;
+}
+
 // Phân tích kịch bản Multi-speaker [VoiceName]: Text
 function parseMultiSpeakerScript(rawText) {
   const lines = rawText.split('\n');
   const dialogueChunks = [];
 
-  const speakerRegex = /^\[([a-zA-Z0-9_]+)\]\s*:\s*(.+)$/;
+  const speakerRegex = /^\[([^\]]+)\]\s*:\s*(.+)$/;
 
   for (let line of lines) {
     line = line.trim();
@@ -477,11 +497,10 @@ function parseMultiSpeakerScript(rawText) {
     const match = line.match(speakerRegex);
     if (match) {
       dialogueChunks.push({
-        voice: match[1],
+        voice: sanitizeVoiceName(match[1]),
         text: match[2]
       });
     } else {
-      // Nếu dòng không ghi tên voice, dùng voice đang chọn mặc định
       dialogueChunks.push({
         voice: voiceSelect.value,
         text: line
