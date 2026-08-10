@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gemini AI Voice Generator - Tạo giọng nói Tiếng Việt tự nhiên</title>
+    <meta name="description" content="Ứng dụng web tạo giọng nói trí tuệ nhân tạo (Text-to-Speech) chuyên nghiệp, tự nhiên bằng Google Gemini API. Tùy chỉnh cảm xúc, tốc độ đọc và tải file WAV chất lượng cao." />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="app">
+      <header class="app-header">
+        <div class="logo-container">
+          <span class="logo-icon">🎙️</span>
+          <h1 id="app-title">Gemini AI Voice Generator</h1>
+        </div>
+        <p class="app-subtitle">Chuyển đổi văn bản thành giọng nói tiếng Việt tự nhiên và biểu cảm bằng AI thế hệ mới từ Google</p>
+      </header>
+
+      <main class="main-container">
+        <!-- Cấu hình API Key -->
+        <section class="api-section glass-card" aria-labelledby="api-heading">
+          <div class="card-header">
+            <span class="header-icon">🔑</span>
+            <h2 id="api-heading">Cấu hình API Key</h2>
+            <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" class="link-helper" id="link-get-key">Lấy Key miễn phí ↗</a>
+          </div>
+          <div class="api-input-group">
+            <div class="input-wrapper">
+              <input type="password" id="input-api-key" placeholder="Dán Gemini API Key của bạn tại đây..." autocomplete="off" />
+              <button type="button" id="btn-toggle-key-visibility" class="btn-icon" title="Hiện/Ẩn API Key">👁️</button>
+            </div>
+            <div class="button-group">
+              <button type="button" id="btn-save-key" class="btn btn-primary">Lưu Key</button>
+              <button type="button" id="btn-clear-key" class="btn btn-secondary">Xóa Key</button>
+            </div>
+          </div>
+          <p class="api-note" id="key-status-text">⚠️ Vui lòng nhập API Key để bắt đầu sử dụng.</p>
+        </section>
+
+        <!-- Trình tạo giọng nói chính -->
+        <section class="generator-section glass-card" aria-labelledby="generator-heading">
+          <div class="card-header">
+            <span class="header-icon">✍️</span>
+            <h2 id="generator-heading">Nội dung & Tùy chọn giọng đọc</h2>
+          </div>
+          
+          <div class="input-container">
+            <textarea id="text-input" placeholder="Nhập văn bản tiếng Việt bạn muốn AI đọc tại đây (tối ưu nhất dưới 5000 ký tự)..." maxlength="10000"></textarea>
+            <div class="textarea-footer">
+              <button type="button" id="btn-sample-text" class="btn-text">Dùng thử văn bản mẫu</button>
+              <span id="char-counter" class="char-counter">0 / 10000 ký tự</span>
+            </div>
+          </div>
+
+          <!-- Tùy chỉnh tham số -->
+          <div class="settings-grid">
+            <div class="settings-control">
+              <label for="select-voice">Giọng đọc chuyên nghiệp (30 Giọng AI)</label>
+              <select id="select-voice">
+                <optgroup label="Giọng Nữ / Tông cao (Bright & Clear)">
+                  <option value="Aoede" selected>Aoede (Nhẹ nhàng - Vlog đời thường, thư giãn)</option>
+                  <option value="Erinome">Erinome (Trong trẻo - Thuyết minh lãng mạn, học tập)</option>
+                  <option value="Autonoe">Autonoe (Sáng - Video ngắn TikTok, review sản phẩm)</option>
+                  <option value="Laomedeia">Laomedeia (Sôi nổi - Tin tức giải trí, công nghệ)</option>
+                  <option value="Sadachbia">Sadachbia (Sinh động - Podcast đối thoại, trò chuyện)</option>
+                  <option value="Leda">Leda (Trẻ trung - Lồng tiếng nhân vật, truyện trẻ em)</option>
+                  <option value="Despina">Despina (Mượt mà - Bài giảng E-Learning, thuyết trình)</option>
+                  <option value="Pulcherrima">Pulcherrima (Trực diện - Hướng dẫn sử dụng, thông báo)</option>
+                  <option value="Achernar">Achernar (Mềm mại - Thiền định, radio tâm sự)</option>
+                  <option value="Enceladus">Enceladus (Hơi thở - Đọc thơ, truyện tình cảm sâu sắc)</option>
+                </optgroup>
+                <optgroup label="Giọng Nam / Tông trầm (Firm & Deep)">
+                  <option value="Fenrir">Fenrir (Hào hứng - TVC quảng cáo, sự kiện thể thao)</option>
+                  <option value="Puck">Puck (Sôi nổi - Video review phim hài, marketing)</option>
+                  <option value="Orus">Orus (Vững chãi - Thuyết minh tài liệu, học thuật)</option>
+                  <option value="Kore">Kore (Vững chãi - Sách nói audiobook, doanh nghiệp)</option>
+                  <option value="Charon">Charon (Thông tin - Tin thời sự chính luận, báo chí)</option>
+                  <option value="Rasalgethi">Rasalgethi (Thông tin - Báo cáo nghiên cứu, phân tích)</option>
+                  <option value="Alnilam">Alnilam (Vững chãi - Thuyết minh lịch sử, chính luận)</option>
+                  <option value="Algenib">Algenib (Khàn trầm - Truyện ma, trinh thám kinh dị)</option>
+                  <option value="Gacrux">Gacrux (Trưởng thành - Giọng tự sự người lớn tuổi)</option>
+                  <option value="Sulafat">Sulafat (Ấm áp - Radio tâm sự, chia sẻ kỹ năng)</option>
+                </optgroup>
+                <optgroup label="Giọng Đa dụng & Trung tính (Easy-going & Casual)">
+                  <option value="Zephyr">Zephyr (Bright - Đa năng, đối thoại)</option>
+                  <option value="Umbriel">Umbriel (Easy-going - Dễ chịu, tự nhiên)</option>
+                  <option value="Schedar">Schedar (Even - Đều đặn, thuyết minh chung)</option>
+                  <option value="Achird">Achird (Friendly - Thân thiện, trò chuyện)</option>
+                  <option value="Algieba">Algieba (Smooth - Mượt mà, dẫn chương trình)</option>
+                  <option value="Zubenelgenubi">Zubenelgenubi (Casual - Tự nhiên, hội thoại)</option>
+                  <option value="Sadaltager">Sadaltager (Knowledgeable - Thông thái, giáo trình)</option>
+                  <option value="Callirrhoe">Callirrhoe (Easy-going - Dễ chịu, thư thái)</option>
+                  <option value="Iapetus">Iapetus (Clear - Trong trẻo, hội thoại)</option>
+                  <option value="Vindemiatrix">Vindemiatrix (Neutral - Trung tính, tin tức)</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <div class="settings-control">
+              <label for="select-emotion">Mục đích sử dụng giọng đọc (Purpose)</label>
+              <select id="select-emotion">
+                <option value="default" selected>Mặc định (Tự nhiên, trôi chảy)</option>
+                <option value="tvc">TVC Quảng cáo thương hiệu (Hào hứng, cuốn hút)</option>
+                <option value="ads">Video quảng cáo ngắn (TikTok/Reels/Facebook)</option>
+                <option value="review">Thuyết minh phim / Review phim (Kịch tính)</option>
+                <option value="news">Bản tin Thời sự / Tin tức (Trang trọng)</option>
+                <option value="story">Kể truyện đêm khuya / Tâm sự (Ấm áp)</option>
+                <option value="horror">Kể truyện kinh dị / Truyện ma (Ma mị)</option>
+                <option value="elearning">Bài giảng E-Learning / Hướng dẫn (Rõ ràng)</option>
+                <option value="comedy">Truyện cười / Hài hước (Dí dỏm)</option>
+                <option value="meditation">Dẫn thiền / Podcast thư giãn (Rất chậm)</option>
+                <option value="custom">Tự tùy chỉnh bằng Prompts...</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Tùy chỉnh prompt nâng cao -->
+          <div class="custom-prompt-container hidden" id="custom-prompt-wrapper">
+            <label for="input-custom-prompt">Hướng dẫn tông giọng tùy chỉnh (Prompts)</label>
+            <input type="text" id="input-custom-prompt" placeholder="Ví dụ: Đọc với tông giọng nam miền Nam, hơi nhanh và kịch tính..." />
+          </div>
+
+          <div class="action-bar">
+            <button type="button" id="btn-generate" class="btn btn-generate-voice btn-large" disabled>
+              <span class="btn-icon">⚡</span>
+              <span class="btn-text">Tạo giọng nói AI</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Trình phát & Tải file kết quả -->
+        <section class="result-section glass-card" aria-labelledby="result-heading">
+          <div class="card-header">
+            <span class="header-icon">🎧</span>
+            <h2 id="result-heading">Trình phát & Tải xuống</h2>
+          </div>
+          
+          <div class="audio-panel-empty" id="audio-empty-state">
+            <p>Âm thanh sau khi tạo xong sẽ xuất hiện ở đây.</p>
+          </div>
+
+          <div class="audio-panel-active hidden" id="audio-player-wrapper">
+            <!-- Custom Audio Player UI -->
+            <div class="custom-player">
+              <audio id="main-audio-element"></audio>
+              
+              <div class="player-controls">
+                <button type="button" id="btn-play-pause" class="btn-play" title="Phát/Tạm dừng">▶</button>
+                
+                <div class="time-slider-container">
+                  <span id="player-current-time">0:00</span>
+                  <input type="range" id="player-progress" min="0" max="100" value="0" />
+                  <span id="player-duration">0:00</span>
+                </div>
+
+                <div class="volume-control">
+                  <button type="button" id="btn-mute" class="btn-mute" title="Tắt tiếng">🔊</button>
+                  <input type="range" id="player-volume" min="0" max="100" value="80" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Waveform Visualizer Canvas -->
+            <div class="visualizer-container">
+              <canvas id="waveform-canvas" width="600" height="120"></canvas>
+              <div class="waveform-overlay">
+                <span class="visualizer-status" id="visualizer-status-text">Sẵn sàng phát âm thanh</span>
+              </div>
+            </div>
+
+            <div class="download-bar">
+              <a id="link-download-wav" class="btn btn-download btn-large" download="gemini-voice.wav">
+                <span class="btn-icon">💾</span>
+                Tải xuống file WAV
+              </a>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="app-footer">
+        <p>© 2026 - Phát triển với ❤️ từ Antigravity AI. Sử dụng Google Gemini AI Engine.</p>
+        <div class="footer-links">
+          <span>Giới hạn miễn phí: 15 RPM / 1,500 RPD</span>
+          <span class="divider">|</span>
+          <a href="https://ai.google.dev/pricing" target="_blank" rel="noopener noreferrer">Bảng giá Gemini API</a>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
