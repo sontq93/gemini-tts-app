@@ -282,7 +282,7 @@ Quy tắc:
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [{ parts: [{ text: promptText }] }]
+        contents: [{ role: "user", parts: [{ text: promptText }] }]
       })
     });
 
@@ -511,7 +511,7 @@ function parseMultiSpeakerScript(rawText) {
   return dialogueChunks;
 }
 
-// Gọi API sinh PCM cho 1 đoạn thoại
+// Gọi API sinh PCM cho 1 đoạn thoại (Có hỗ trợ tự động thử lại model dự phòng)
 async function fetchPcmChunk(text, voiceName, emotionPrompt) {
   const finalPrompt = `Bạn là một trợ lý ảo đọc sách chuyên nghiệp. Đọc to và rõ ràng văn bản sau bằng tiếng Việt. KHÔNG được thêm bất kỳ câu mở đầu, kết thúc hoặc từ ngữ nào nằm ngoài văn bản được cung cấp.
 Hướng dẫn về ngữ điệu/cảm xúc khi đọc: ${emotionPrompt}
@@ -519,40 +519,71 @@ Hướng dẫn về ngữ điệu/cảm xúc khi đọc: ${emotionPrompt}
 Văn bản cần đọc:
 "${text}"`;
 
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-tts-preview:generateContent?key=${apiKey}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: finalPrompt }] }],
-      generationConfig: {
-        responseModalities: ["AUDIO"],
-        speechConfig: {
-          voiceConfig: {
-            prebuiltVoiceConfig: { voiceName: voiceName }
+  const modelsToTry = [
+    'gemini-3.1-flash-tts-preview',
+    'gemini-2.5-flash-preview-tts',
+    'gemini-2.0-flash'
+  ];
+
+  let lastError = null;
+
+  for (const modelName of modelsToTry) {
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: finalPrompt }]
+            }
+          ],
+          generationConfig: {
+            responseModalities: ["AUDIO"],
+            speechConfig: {
+              voiceConfig: {
+                prebuiltVoiceConfig: { voiceName: voiceName }
+              }
+            }
           }
+        })
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        const errMsg = errData.error?.message || `Lỗi HTTP ${response.status}`;
+        lastError = new Error(errMsg);
+        if (response.status === 400 || response.status === 404) {
+          console.warn(`Model ${modelName} trả về lỗi ${response.status}, thử model tiếp theo...`);
+          continue;
+        } else {
+          throw lastError;
         }
       }
-    })
-  });
 
-  if (!response.ok) {
-    const errData = await response.json().catch(() => ({}));
-    throw new Error(errData.error?.message || `Lỗi HTTP ${response.status}`);
+      const result = await response.json();
+      const base64Audio = result.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+      if (!base64Audio) {
+        throw new Error("Không nhận được dữ liệu âm thanh từ mô hình AI.");
+      }
+
+      const binaryString = atob(base64Audio);
+      const pcmBytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        pcmBytes[i] = binaryString.charCodeAt(i);
+      }
+
+      return pcmBytes;
+    } catch (err) {
+      lastError = err;
+      if (modelName === modelsToTry[modelsToTry.length - 1]) {
+        throw lastError;
+      }
+    }
   }
 
-  const result = await response.json();
-  const base64Audio = result.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-  if (!base64Audio) {
-    throw new Error("Không nhận được dữ liệu âm thanh từ mô hình AI.");
-  }
-
-  const binaryString = atob(base64Audio);
-  const pcmBytes = new Uint8Array(binaryString.length);
-  for (let i = 0; i < binaryString.length; i++) {
-    pcmBytes[i] = binaryString.charCodeAt(i);
-  }
-
-  return pcmBytes;
+  throw lastError || new Error("Không thể kết nối dịch vụ giọng nói Gemini.");
 }
 
 generateBtn.addEventListener('click', async () => {
