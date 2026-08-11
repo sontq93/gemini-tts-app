@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gemini AI Voice Studio Pro - Tạo Giọng Nói & Kịch Bản Tiếng Việt</title>
+    <meta name="description" content="Ứng dụng web tạo giọng nói trí tuệ nhân tạo (Text-to-Speech) chuyên nghiệp bằng Google Gemini API. Hỗ trợ 30 giọng AI, hội thoại đa nhân vật, nhạc nền Auto-Ducking và trợ lý viết kịch bản." />
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script type="module" crossorigin src="/assets/index-CN5wwyWP.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-DOQrRsBf.css">
+  </head>
+  <body>
+    <div id="app">
+      <header class="app-header">
+        <div class="logo-container">
+          <span class="logo-icon">🎙️</span>
+          <h1 id="app-title">Gemini AI Voice Studio Pro</h1>
+        </div>
+        <p class="app-subtitle">Studio chuyển đổi văn bản thành giọng nói tiếng Việt tự nhiên, đa nhân vật & trộn nhạc nền chuyên nghiệp bằng Google Gemini</p>
+      </header>
+
+      <main class="main-container">
+        <!-- Cấu hình API Key -->
+        <section class="api-section glass-card" aria-labelledby="api-heading">
+          <div class="card-header">
+            <span class="header-icon">🔑</span>
+            <h2 id="api-heading">Cấu hình API Key</h2>
+            <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer" class="link-helper" id="link-get-key">Lấy Key miễn phí ↗</a>
+          </div>
+          <div class="api-input-group">
+            <div class="input-wrapper">
+              <input type="password" id="input-api-key" placeholder="Dán Gemini API Key của bạn tại đây..." autocomplete="off" />
+              <button type="button" id="btn-toggle-key-visibility" class="btn-icon" title="Hiện/Ẩn API Key">👁️</button>
+            </div>
+            <div class="button-group">
+              <button type="button" id="btn-save-key" class="btn btn-primary">Lưu Key</button>
+              <button type="button" id="btn-clear-key" class="btn btn-secondary">Xóa Key</button>
+            </div>
+          </div>
+          <p class="api-note" id="key-status-text">⚠️ Vui lòng nhập API Key để bắt đầu sử dụng.</p>
+        </section>
+
+        <!-- Studio Mode Selector Navigation Tabs -->
+        <nav class="studio-nav-tabs glass-card" aria-label="Chế độ Studio">
+          <button type="button" id="btn-tab-single" class="tab-btn active">
+            <span class="tab-icon">🎙️</span>
+            <span>Tạo Giọng Đơn (Mặc định)</span>
+          </button>
+          <button type="button" id="btn-tab-multi" class="tab-btn">
+            <span class="tab-icon">🎭</span>
+            <span>Hội Thoại Đa Nhân Vật</span>
+          </button>
+          <button type="button" id="btn-tab-script" class="tab-btn">
+            <span class="tab-icon">🤖</span>
+            <span>Trợ Lý AI Viết Kịch Bản</span>
+          </button>
+        </nav>
+
+        <!-- Trợ Lý AI Viết Kịch Bản Panel (Tab 3 Panel) -->
+        <section class="ai-script-section glass-card hidden" id="panel-script-assistant">
+          <div class="card-header">
+            <span class="header-icon">✨</span>
+            <h2>Trợ Lý AI Sáng Tạo Kịch Bản</h2>
+          </div>
+          <div class="script-builder-grid">
+            <div class="input-group-field">
+              <label for="input-script-idea">Ý tưởng kịch bản của bạn</label>
+              <input type="text" id="input-script-idea" placeholder="Ví dụ: Viết kịch bản quảng cáo tai nghe Bluetooth chống ồn 15s cho TikTok..." />
+            </div>
+            <div class="input-group-field">
+              <label for="select-script-genre">Thể loại kịch bản</label>
+              <select id="select-script-genre">
+                <option value="tvc" selected>TVC Quảng cáo thương hiệu</option>
+                <option value="tiktok">Video ngắn TikTok / Reels (Sôi nổi)</option>
+                <option value="dialogue">Hội thoại 2 nhân vật (Đối thoại)</option>
+                <option value="review">Review phim / Thuyết minh (Kịch tính)</option>
+                <option value="horror">Truyện kinh dị / Truyện ma (U tối)</option>
+                <option value="news">Bản tin Thời sự / Tin tức ngắn</option>
+              </select>
+            </div>
+          </div>
+          <div class="action-bar-left">
+            <button type="button" id="btn-generate-script" class="btn btn-secondary">
+              <span>🤖 Sáng tạo Kịch bản bằng AI</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Trình tạo giọng nói chính (Tab 1 & Tab 2 Panel) -->
+        <section class="generator-section glass-card" aria-labelledby="generator-heading">
+          <div class="card-header">
+            <span class="header-icon">✍️</span>
+            <h2 id="generator-heading">Nội dung & Tùy chọn giọng đọc</h2>
+          </div>
+          
+          <!-- Thẻ Hướng dẫn cho Chế độ Multi-Speaker -->
+          <div class="multi-speaker-banner hidden" id="multi-speaker-info">
+            <p>💡 <strong>Cú pháp Hội thoại:</strong> Nhập kịch bản theo định dạng <code>[TênGiọng]: Nội dung thoại</code>. Hệ thống sẽ tự động ghép giọng phù hợp từng câu!</p>
+            <button type="button" id="btn-sample-dialogue" class="btn-text highlight-link">Nạp kịch bản mẫu 2 nhân vật</button>
+          </div>
+
+          <div class="input-container">
+            <textarea id="text-input" placeholder="Nhập văn bản tiếng Việt bạn muốn AI đọc tại đây (tối ưu nhất dưới 5000 ký tự)..." maxlength="10000"></textarea>
+            <div class="textarea-footer">
+              <div class="left-actions">
+                <button type="button" id="btn-sample-text" class="btn-text">Dùng thử văn bản mẫu</button>
+                <span class="divider">|</span>
+                <button type="button" id="btn-import-file" class="btn-text">📁 Nạp file .txt / .md</button>
+                <input type="file" id="input-file-element" accept=".txt,.md" class="hidden" />
+              </div>
+              <span id="char-counter" class="char-counter">0 / 10,000 ký tự</span>
+            </div>
+          </div>
+
+          <!-- Tùy chỉnh tham số Giọng đọc & Mục đích -->
+          <div class="settings-grid" id="settings-grid-single">
+            <div class="settings-control">
+              <label for="select-voice">Giọng đọc chuyên nghiệp (30 Giọng AI)</label>
+              <select id="select-voice">
+                <optgroup label="Giọng Nữ / Tông cao (Bright & Clear)">
+                  <option value="Aoede" selected>Aoede (Nhẹ nhàng - Vlog đời thường, thư giãn)</option>
+                  <option value="Erinome">Erinome (Trong trẻo - Thuyết minh lãng mạn, học tập)</option>
+                  <option value="Autonoe">Autonoe (Sáng - Video ngắn TikTok, review sản phẩm)</option>
+                  <option value="Laomedeia">Laomedeia (Sôi nổi - Tin tức giải trí, công nghệ)</option>
+                  <option value="Sadachbia">Sadachbia (Sinh động - Podcast đối thoại, trò chuyện)</option>
+                  <option value="Leda">Leda (Trẻ trung - Lồng tiếng nhân vật, truyện trẻ em)</option>
+                  <option value="Despina">Despina (Mượt mà - Bài giảng E-Learning, thuyết trình)</option>
+                  <option value="Pulcherrima">Pulcherrima (Trực diện - Hướng dẫn sử dụng, thông báo)</option>
+                  <option value="Achernar">Achernar (Mềm mại - Thiền định, radio tâm sự)</option>
+                  <option value="Enceladus">Enceladus (Hơi thở - Đọc thơ, truyện tình cảm sâu sắc)</option>
+                </optgroup>
+                <optgroup label="Giọng Nam / Tông trầm (Firm & Deep)">
+                  <option value="Fenrir">Fenrir (Hào hứng - TVC quảng cáo, sự kiện thể thao)</option>
+                  <option value="Puck">Puck (Sôi nổi - Video review phim hài, marketing)</option>
+                  <option value="Orus">Orus (Vững chãi - Thuyết minh tài liệu, học thuật)</option>
+                  <option value="Kore">Kore (Vững chãi - Sách nói audiobook, doanh nghiệp)</option>
+                  <option value="Charon">Charon (Thông tin - Tin thời sự chính luận, báo chí)</option>
+                  <option value="Rasalgethi">Rasalgethi (Thông tin - Báo cáo nghiên cứu, phân tích)</option>
+                  <option value="Alnilam">Alnilam (Vững chãi - Thuyết minh lịch sử, chính luận)</option>
+                  <option value="Algenib">Algenib (Khàn trầm - Truyện ma, trinh thám kinh dị)</option>
+                  <option value="Gacrux">Gacrux (Trưởng thành - Giọng tự sự người lớn tuổi)</option>
+                  <option value="Sulafat">Sulafat (Ấm áp - Radio tâm sự, chia sẻ kỹ năng)</option>
+                </optgroup>
+                <optgroup label="Giọng Đa dụng & Trung tính (Easy-going & Casual)">
+                  <option value="Zephyr">Zephyr (Bright - Đa năng, đối thoại)</option>
+                  <option value="Umbriel">Umbriel (Easy-going - Dễ chịu, tự nhiên)</option>
+                  <option value="Schedar">Schedar (Even - Đều đặn, thuyết minh chung)</option>
+                  <option value="Achird">Achird (Friendly - Thân thiện, trò chuyện)</option>
+                  <option value="Algieba">Algieba (Smooth - Mượt mà, dẫn chương trình)</option>
+                  <option value="Zubenelgenubi">Zubenelgenubi (Casual - Tự nhiên, hội thoại)</option>
+                  <option value="Sadaltager">Sadaltager (Knowledgeable - Thông thái, giáo trình)</option>
+                  <option value="Callirrhoe">Callirrhoe (Easy-going - Dễ chịu, thư thái)</option>
+                  <option value="Iapetus">Iapetus (Clear - Trong trẻo, hội thoại)</option>
+                  <option value="Vindemiatrix">Vindemiatrix (Neutral - Trung tính, tin tức)</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <div class="settings-control">
+              <label for="select-emotion">Mục đích sử dụng giọng đọc (Purpose)</label>
+              <select id="select-emotion">
+                <option value="default" selected>Mặc định (Tự nhiên, trôi chảy)</option>
+                <option value="tvc">TVC Quảng cáo thương hiệu (Hào hứng, cuốn hút)</option>
+                <option value="ads">Video quảng cáo ngắn (TikTok/Reels/Facebook)</option>
+                <option value="review">Thuyết minh phim / Review phim (Kịch tính)</option>
+                <option value="news">Bản tin Thời sự / Tin tức (Trang trọng)</option>
+                <option value="story">Kể truyện đêm khuya / Tâm sự (Ấm áp)</option>
+                <option value="horror">Kể truyện kinh dị / Truyện ma (Ma mị)</option>
+                <option value="elearning">Bài giảng E-Learning / Hướng dẫn (Rõ ràng)</option>
+                <option value="comedy">Truyện cười / Hài hước (Dí dỏm)</option>
+                <option value="meditation">Dẫn thiền / Podcast thư giãn (Rất chậm)</option>
+                <option value="custom">Tự tùy chỉnh bằng Prompts...</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Tùy chỉnh prompt nâng cao -->
+          <div class="custom-prompt-container hidden" id="custom-prompt-wrapper">
+            <label for="input-custom-prompt">Hướng dẫn tông giọng tùy chỉnh (Prompts)</label>
+            <input type="text" id="input-custom-prompt" placeholder="Ví dụ: Đọc với tông giọng nam miền Nam, hơi nhanh và kịch tính..." />
+          </div>
+
+          <!-- Bảng Trộn Nhạc Nền (BGM Mixer Panel) -->
+          <div class="bgm-panel">
+            <div class="bgm-header">
+              <span class="bgm-title">🎵 Trộn Nhạc Nền (Background Music)</span>
+              <label class="toggle-switch">
+                <input type="checkbox" id="check-enable-bgm" />
+                <span class="slider round"></span>
+                <span class="switch-label">Bật Nhạc Nền</span>
+              </label>
+            </div>
+            
+            <div class="bgm-controls hidden" id="bgm-controls-body">
+              <div class="bgm-grid">
+                <div class="settings-control">
+                  <label for="select-bgm-theme">Giai điệu nhạc nền</label>
+                  <select id="select-bgm-theme">
+                    <option value="tvc" selected>TVC Quảng Cáo (Sôi nổi, hiện đại)</option>
+                    <option value="horror">Truyện Ma / Kinh Dị (U tối, bí ẩn)</option>
+                    <option value="relax">Thư Giãn / Dẫn Thiền (Trầm ấm, yên bình)</option>
+                    <option value="news">Bản Tin / Thời Sự (Trang trọng)</option>
+                    <option value="custom">Tải nhạc cá nhân (.mp3 / .wav)...</option>
+                  </select>
+                  <input type="file" id="input-custom-bgm-file" accept="audio/*" class="hidden" />
+                </div>
+                
+                <div class="settings-control">
+                  <label for="slider-bgm-volume">Âm lượng nhạc nền (<span id="bgm-vol-val">25%</span>)</label>
+                  <input type="range" id="slider-bgm-volume" min="5" max="80" value="25" />
+                </div>
+              </div>
+
+              <div class="bgm-footer-option">
+                <label class="checkbox-container">
+                  <input type="checkbox" id="check-auto-ducking" checked />
+                  <span class="checkmark"></span>
+                  <span class="checkbox-text">✨ <strong>Auto-Ducking:</strong> Tự động giảm âm lượng nhạc nền xuống 25% khi có giọng AI cất lên</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="action-bar">
+            <button type="button" id="btn-generate" class="btn btn-generate-voice btn-large" disabled>
+              <span class="btn-icon">⚡</span>
+              <span class="btn-text">Tạo giọng nói AI</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Trình phát & Tải file kết quả -->
+        <section class="result-section glass-card" aria-labelledby="result-heading">
+          <div class="card-header">
+            <span class="header-icon">🎧</span>
+            <h2 id="result-heading">Trình phát & Tải xuống</h2>
+          </div>
+          
+          <div class="audio-panel-empty" id="audio-empty-state">
+            <p>Âm thanh sau khi tạo xong sẽ xuất hiện ở đây.</p>
+          </div>
+
+          <div class="audio-panel-active hidden" id="audio-player-wrapper">
+            <!-- Custom Audio Player UI -->
+            <div class="custom-player">
+              <audio id="main-audio-element"></audio>
+              
+              <div class="player-controls">
+                <button type="button" id="btn-play-pause" class="btn-play" title="Phát/Tạm dừng">▶</button>
+                
+                <div class="time-slider-container">
+                  <span id="player-current-time">0:00</span>
+                  <input type="range" id="player-progress" min="0" max="100" value="0" />
+                  <span id="player-duration">0:00</span>
+                </div>
+
+                <!-- Speed Selector Control -->
+                <div class="speed-control">
+                  <span class="speed-label">Tốc độ:</span>
+                  <div class="speed-buttons" id="speed-buttons-group">
+                    <button type="button" class="btn-speed" data-speed="0.75">0.75x</button>
+                    <button type="button" class="btn-speed active" data-speed="1.0">1.0x</button>
+                    <button type="button" class="btn-speed" data-speed="1.25">1.25x</button>
+                    <button type="button" class="btn-speed" data-speed="1.5">1.5x</button>
+                    <button type="button" class="btn-speed" data-speed="2.0">2.0x</button>
+                  </div>
+                </div>
+
+                <div class="volume-control">
+                  <button type="button" id="btn-mute" class="btn-mute" title="Tắt tiếng">🔊</button>
+                  <input type="range" id="player-volume" min="0" max="100" value="80" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Waveform Visualizer Canvas -->
+            <div class="visualizer-container">
+              <canvas id="waveform-canvas" width="600" height="120"></canvas>
+              <div class="waveform-overlay">
+                <span class="visualizer-status" id="visualizer-status-text">Sẵn sàng phát âm thanh</span>
+              </div>
+            </div>
+
+            <div class="download-bar">
+              <a id="link-download-wav" class="btn btn-download btn-large" download="gemini-voice-studio.wav">
+                <span class="btn-icon">💾</span>
+                Tải xuống file WAV (Master Studio)
+              </a>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <footer class="app-footer">
+        <p>© 2026 - Phát triển với ❤️ từ Antigravity AI. Sử dụng Google Gemini AI Engine.</p>
+        <div class="footer-links">
+          <span>Giới hạn miễn phí: 15 RPM / 1,500 RPD</span>
+          <span class="divider">|</span>
+          <a href="https://ai.google.dev/pricing" target="_blank" rel="noopener noreferrer">Bảng giá Gemini API</a>
+        </div>
+      </footer>
+    </div>
+    
+  </body>
+</html>
