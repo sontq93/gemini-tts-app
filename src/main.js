@@ -519,10 +519,11 @@ Hướng dẫn về ngữ điệu/cảm xúc khi đọc: ${emotionPrompt}
 Văn bản cần đọc:
 "${text}"`;
 
+  // Các mô hình Gemini hỗ trợ xuất âm thanh Audio Native theo ưu tiên
   const modelsToTry = [
-    'gemini-2.5-flash',
-    'gemini-2.0-flash',
     'gemini-2.0-flash-exp',
+    'gemini-2.0-flash',
+    'gemini-2.5-flash-preview-tts',
     'gemini-3.1-flash-tts-preview'
   ];
 
@@ -563,9 +564,9 @@ Văn bản cần đọc:
           throw new Error("⚠️ API Key của bạn không hợp lệ hoặc đã bị hết hạn. Vui lòng bấm 'Lấy Key miễn phí' để tạo API Key mới từ Google AI Studio.");
         }
 
-        lastError = new Error(errMsg);
+        lastError = new Error(`[Model ${modelName}]: ${errMsg}`);
         if (response.status === 400 || response.status === 404) {
-          console.warn(`Model ${modelName} không phản hồi (${response.status}), đang thử model tiếp theo...`);
+          console.warn(`Model ${modelName} không hỗ trợ audio hoặc bận (${response.status}), thử model tiếp theo...`);
           continue;
         } else {
           throw lastError;
