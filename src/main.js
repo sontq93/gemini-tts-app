@@ -520,9 +520,10 @@ Văn bản cần đọc:
 "${text}"`;
 
   const modelsToTry = [
-    'gemini-3.1-flash-tts-preview',
-    'gemini-2.5-flash-preview-tts',
-    'gemini-2.0-flash'
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-2.0-flash-exp',
+    'gemini-3.1-flash-tts-preview'
   ];
 
   let lastError = null;
@@ -553,9 +554,18 @@ Văn bản cần đọc:
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
         const errMsg = errData.error?.message || `Lỗi HTTP ${response.status}`;
+        
+        // Kiểm tra nếu API Key bị sai / hỏng
+        const isKeyInvalid = errMsg.includes("API key not valid") || 
+                             errData.error?.details?.[0]?.reason === "API_KEY_INVALID" ||
+                             errData.error?.status === "UNAUTHENTICATED";
+        if (isKeyInvalid) {
+          throw new Error("⚠️ API Key của bạn không hợp lệ hoặc đã bị hết hạn. Vui lòng bấm 'Lấy Key miễn phí' để tạo API Key mới từ Google AI Studio.");
+        }
+
         lastError = new Error(errMsg);
         if (response.status === 400 || response.status === 404) {
-          console.warn(`Model ${modelName} trả về lỗi ${response.status}, thử model tiếp theo...`);
+          console.warn(`Model ${modelName} không phản hồi (${response.status}), đang thử model tiếp theo...`);
           continue;
         } else {
           throw lastError;
